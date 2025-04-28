@@ -1,6 +1,5 @@
 package ru.omgtu.servlets;
 
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,17 +9,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 
 
+import lombok.RequiredArgsConstructor;
 import ru.omgtu.model.Point;
 import ru.omgtu.service.PointService;
 
 
 import java.io.IOException;
 
-
-@WebServlet("/points")
+@RequiredArgsConstructor
 public class PointServlet extends HttpServlet {
-    private final PointService pointService = new PointService();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final PointService pointService;
+    private final ObjectMapper objectMapper;
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws  IOException {
