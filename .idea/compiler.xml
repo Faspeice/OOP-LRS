@@ -9,5 +9,8 @@
         <module name="OOP-LRS" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="lr-6" target="17" />
+    </bytecodeTargetLevel>
   </component>
 </project>
