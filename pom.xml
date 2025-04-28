@@ -6,11 +6,6 @@
     <artifactId>my-app</artifactId>
     <version>1.0.7</version>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>jakarta.servlet</groupId>
@@ -29,16 +24,6 @@
             <version>1.18.36</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>jakarta.servlet.jsp.jstl</groupId>
-            <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
-            <version>3.0.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.web</groupId>
-            <artifactId>jakarta.servlet.jsp.jstl</artifactId>
-            <version>3.0.1</version>
-        </dependency>
 
     </dependencies>
 
@@ -52,7 +37,7 @@
                 <configuration>
                     <source>17</source>
                     <target>17</target>
-                    <encoding>UTF-8</encoding>
+
                 </configuration>
             </plugin>
 
@@ -64,9 +49,6 @@
                     <container>
                         <containerId>tomcat10x</containerId>
                         <type>embedded</type>
-                        <systemProperties>
-                            <file.encoding>UTF-8</file.encoding>
-                        </systemProperties>
                     </container>
                 </configuration>
             </plugin>
