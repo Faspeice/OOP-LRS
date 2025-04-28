@@ -17,7 +17,7 @@
                     <div class="card-body">
                         <h5 class="card-title">Пневматическое оружие</h5>
                         <p class="card-text">Широкий выбор пневматического оружия для страйкбола.</p>
-                        <a href="#" class="btn btn-primary">Подробнее</a>
+                        <a href="${pageContext.request.contextPath}/guns" class="btn btn-primary">Подробнее</a>
                     </div>
                 </div>
             </div>
