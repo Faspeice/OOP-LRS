@@ -1,23 +1,20 @@
 package ru.omgtu.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import ru.omgtu.model.Gun;
-import ru.omgtu.model.ProductStatus;
 import ru.omgtu.service.GunService;
 
 import java.io.IOException;
+import java.io.BufferedReader;
+import java.util.List;
 
 public class GunApiServlet extends HttpServlet {
-    private final ObjectMapper objectMapper;
     private final GunService gunService;
 
-    public GunApiServlet(GunService gunService, ObjectMapper objectMapper) {
+    public GunApiServlet(GunService gunService) {
         this.gunService = gunService;
-        this.objectMapper = objectMapper;
     }
 
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -25,10 +22,11 @@ public class GunApiServlet extends HttpServlet {
         try {
             resp.setContentType("application/json");
             resp.setCharacterEncoding("UTF-8");
-            objectMapper.writeValue(resp.getWriter(), gunService.getAllGuns());
+            List<String> guns = gunService.getAllGuns();
+            resp.getWriter().write("[" + String.join(",", guns) + "]");
         } catch (Exception e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().write("Ошибка при получении списка оружия: " + e.getMessage());
+            resp.getWriter().write("{\"error\":\"Ошибка при получении списка оружия: " + e.getMessage() + "\"}");
         }
     }
 
@@ -36,15 +34,21 @@ public class GunApiServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
         try {
-            Gun newGun = objectMapper.readValue(req.getReader(), Gun.class);
-            newGun.setStatus(ProductStatus.valueOf(newGun.getStatus().name()));
-            gunService.addGun(newGun);
+            BufferedReader reader = req.getReader();
+            StringBuilder jsonBuilder = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                jsonBuilder.append(line);
+            }
+            String json = jsonBuilder.toString();
+            
+            gunService.addGun(json);
             resp.setContentType("application/json");
             resp.setCharacterEncoding("UTF-8");
-            objectMapper.writeValue(resp.getWriter(), newGun);
+            resp.getWriter().write(json);
         } catch (Exception e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("Ошибка при создании оружия: " + e.getMessage());
+            resp.getWriter().write("{\"error\":\"Ошибка при создании оружия: " + e.getMessage() + "\"}");
         }
     }
 } 

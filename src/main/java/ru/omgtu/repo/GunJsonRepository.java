@@ -1,48 +1,62 @@
 package ru.omgtu.repo;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import ru.omgtu.model.Gun;
-
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class GunJsonRepository {
-    private final ObjectMapper objectMapper;
-    private final File dataFile;
+    private static final String FILE_PATH = "src/main/resources/data/guns.json";
+    private final File file;
 
-    public GunJsonRepository(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-        this.objectMapper.writerWithDefaultPrettyPrinter();
-        
-        String projectRoot = System.getProperty("user.dir");
-        File resourcesDir = new File(projectRoot, "src/main/resources/data");
-        
-        if (!resourcesDir.exists()) {
-            resourcesDir.mkdirs();
+    public GunJsonRepository() {
+        this.file = new File(FILE_PATH);
+        if (!file.exists()) {
+            try {
+                file.getParentFile().mkdirs();
+                file.createNewFile();
+                try (FileWriter writer = new FileWriter(file)) {
+                    writer.write("[]");
+                }
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to create guns.json file", e);
+            }
         }
-        
-        this.dataFile = new File(resourcesDir, "guns.json");
     }
 
-    public List<Gun> loadGunsFromFile() {
-        try {
-            if (dataFile.exists()) {
-                return objectMapper.readValue(dataFile, 
-                    objectMapper.getTypeFactory().constructCollectionType(List.class, Gun.class));
+    public List<String> getAllGuns() {
+        List<String> guns = new ArrayList<>();
+        try (FileReader reader = new FileReader(file)) {
+            StringBuilder content = new StringBuilder();
+            int ch;
+            while ((ch = reader.read()) != -1) {
+                content.append((char) ch);
+            }
+            String json = content.toString().trim();
+            if (json.startsWith("[") && json.endsWith("]")) {
+                json = json.substring(1, json.length() - 1);
+                if (!json.isEmpty()) {
+                    String[] gunArray = json.split("(?<=}),");
+                    for (String gun : gunArray) {
+                        guns.add(gun.trim());
+                    }
+                }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Failed to read guns from file", e);
         }
-        return new ArrayList<>();
+        return guns;
     }
 
-    public void writeGunsToFile(List<Gun> guns) {
-        try {
-            objectMapper.writerWithDefaultPrettyPrinter().writeValue(dataFile, guns);
+    public void addGun(String gunJson) {
+        List<String> guns = getAllGuns();
+        guns.add(gunJson);
+        try (FileWriter writer = new FileWriter(file)) {
+            writer.write("[" + String.join(",", guns) + "]");
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Failed to write gun to file", e);
         }
     }
 } 

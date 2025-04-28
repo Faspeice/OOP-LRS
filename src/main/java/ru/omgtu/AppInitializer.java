@@ -4,7 +4,6 @@ import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import ru.omgtu.controller.GunServlet;
 import ru.omgtu.controller.GunApiServlet;
 import ru.omgtu.controller.AboutServlet;
@@ -22,8 +21,7 @@ public class AppInitializer implements ServletContextListener {
     public void contextInitialized(ServletContextEvent sce) {
         ServletContext context = sce.getServletContext();
         
-        ObjectMapper objectMapper = new ObjectMapper();
-        GunJsonRepository repository = new GunJsonRepository(objectMapper);
+        GunJsonRepository repository = new GunJsonRepository();
         GunService gunService = new GunService(repository);
         
         if (gunService.getAllGuns().isEmpty()) {
@@ -33,7 +31,7 @@ public class AppInitializer implements ServletContextListener {
         GunServlet gunServlet = new GunServlet();
         context.addServlet("GunServlet", gunServlet).addMapping("/guns");
         
-        GunApiServlet gunApiServlet = new GunApiServlet(gunService, objectMapper);
+        GunApiServlet gunApiServlet = new GunApiServlet(gunService);
         context.addServlet("GunApiServlet", gunApiServlet).addMapping("/api/guns");
 
         context
