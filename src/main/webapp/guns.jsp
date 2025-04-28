@@ -1,5 +1,4 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" pageEncoding="UTF-8" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -37,25 +36,7 @@
             </div>
 
             <div class="row" id="gunsContainer">
-                <c:forEach items="${guns}" var="gun">
-                    <div class="col-md-4 mb-4">
-                        <div class="card h-100 position-relative">
-                            <span class="badge ${gun.status == 'AVAILABLE' ? 'bg-success' : 'bg-danger'} status-badge">
-                                ${gun.status == 'AVAILABLE' ? 'В наличии' : 'Нет в наличии'}
-                            </span>
-                            <img src="${gun.img}" class="card-img-top" alt="${gun.name}">
-                            <div class="card-body">
-                                <h5 class="card-title">${gun.name}</h5>
-                                <p class="card-text">${gun.description}</p>
-                                <ul class="list-group list-group-flush mb-3">
-                                    <li class="list-group-item"><strong>Производитель:</strong> ${gun.producer}</li>
-                                    <li class="list-group-item"><strong>Модель:</strong> ${gun.model}</li>
-                                    <li class="list-group-item"><strong>Цена:</strong> ${gun.price} руб.</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </c:forEach>
+                <!-- Здесь будут отображаться карточки оружия -->
             </div>
         </div>
 
@@ -115,19 +96,56 @@
     <%@include file="../includes/scripts.jsp"%>
 
     <script>
-        // Проверяем, что jQuery загружен
-        if (typeof jQuery == 'undefined') {
-            console.error('jQuery не загружен!');
-            alert('Ошибка: jQuery не загружен. Пожалуйста, обновите страницу.');
+        function createGunCard(gun) {
+            const card = document.createElement('div');
+            card.className = 'col-md-4 mb-4';
+            
+            const cardContent = `
+                <div class="card h-100 position-relative">
+                    <span class="badge \${gun.status === 'AVAILABLE' ? 'bg-success' : 'bg-danger'} status-badge">
+                        \${gun.status === 'AVAILABLE' ? 'В наличии' : 'Нет в наличии'}
+                    </span>
+                    <img src="\${gun.img}" class="card-img-top" alt="\${gun.name}">
+                    <div class="card-body">
+                        <h5 class="card-title">\${gun.name}</h5>
+                        <p class="card-text">\${gun.description}</p>
+                        <ul class="list-group list-group-flush mb-3">
+                            <li class="list-group-item"><strong>Производитель:</strong> \${gun.producer}</li>
+                            <li class="list-group-item"><strong>Модель:</strong> \${gun.model}</li>
+                            <li class="list-group-item"><strong>Цена:</strong> \${gun.price} руб.</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+            
+            card.innerHTML = cardContent;
+            return card;
+        }
+
+        function loadGuns() {
+            $.ajax({
+                url: '${pageContext.request.contextPath}/api/guns',
+                type: 'GET',
+                success: function(guns) {
+                    const container = document.getElementById('gunsContainer');
+                    container.innerHTML = '';
+                    
+                    guns.forEach(gun => {
+                        const card = createGunCard(gun);
+                        container.appendChild(card);
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading guns:', error);
+                    alert('Ошибка при загрузке данных');
+                }
+            });
         }
 
         $(document).ready(function() {
-            console.log('jQuery загружен и готов к использованию');
+            loadGuns();
             
             $('#submitGun').click(function() {
-                console.log('Кнопка "Добавить" нажата');
-                
-                // Проверяем, что форма валидна
                 if (!$('#addGunForm')[0].checkValidity()) {
                     $('#addGunForm')[0].reportValidity();
                     return;
@@ -143,32 +161,22 @@
                     status: $('#status').val()
                 };
 
-                console.log('Sending data:', gunData);
-                console.log('Request URL:', '${pageContext.request.contextPath}/guns');
-
                 $.ajax({
-                    url: '${pageContext.request.contextPath}/guns',
+                    url: '${pageContext.request.contextPath}/api/guns',
                     type: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify(gunData),
                     success: function(response) {
-                        console.log('Success response:', response);
                         $('#addGunModal').modal('hide');
-                        location.reload();
+                        $('#addGunForm')[0].reset();
+                        loadGuns();
                     },
                     error: function(xhr, status, error) {
-                        console.error('Error details:', {
-                            status: status,
-                            error: error,
-                            response: xhr.responseText,
-                            statusCode: xhr.status
-                        });
                         alert('Ошибка при добавлении оружия: ' + xhr.responseText);
                     }
                 });
             });
 
-            // Очистка формы при закрытии модального окна
             $('#addGunModal').on('hidden.bs.modal', function () {
                 $('#addGunForm')[0].reset();
             });
