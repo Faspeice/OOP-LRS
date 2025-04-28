@@ -12,9 +12,12 @@ import ru.omgtu.controller.ContactServlet;
 import ru.omgtu.controller.FeedbackServlet;
 import ru.omgtu.controller.HomeServlet;
 import ru.omgtu.controller.ProductsServlet;
+import ru.omgtu.repo.GunJdbcDao;
 import ru.omgtu.service.GunService;
-import ru.omgtu.repo.GunJsonRepository;
-import ru.omgtu.factory.GunFactory;
+
+import ru.omgtu.util.ConnectionProvider;
+
+import java.sql.SQLException;
 
 @WebListener
 public class AppInitializer implements ServletContextListener {
@@ -23,38 +26,38 @@ public class AppInitializer implements ServletContextListener {
         ServletContext context = sce.getServletContext();
         
         ObjectMapper objectMapper = new ObjectMapper();
-        GunJsonRepository repository = new GunJsonRepository(objectMapper);
-        GunService gunService = new GunService(repository);
+        try {
+            GunJdbcDao gunDao = new GunJdbcDao(ConnectionProvider.getConnection());
+            GunService gunService = new GunService(gunDao);
+
+            GunServlet gunServlet = new GunServlet();
+            context.addServlet("GunServlet", gunServlet).addMapping("/guns");
         
-        if (gunService.getAllGuns().isEmpty()) {
-            GunFactory.createInitialGuns().forEach(gunService::addGun);
+            GunApiServlet gunApiServlet = new GunApiServlet(gunService, objectMapper);
+            context.addServlet("GunApiServlet", gunApiServlet).addMapping("/api/guns", "/api/guns/*");
+
+            context
+                    .addServlet("aboutServlet", new AboutServlet())
+                    .addMapping("/about");
+
+            context
+                    .addServlet("contactServlet", new ContactServlet())
+                    .addMapping("/contact");
+
+            context
+                    .addServlet("feedbackServlet", new FeedbackServlet())
+                    .addMapping("/feedback");
+
+            context
+                    .addServlet("homeServlet", new HomeServlet())
+                    .addMapping("/home");
+
+            context
+                    .addServlet("productServlet", new ProductsServlet())
+                    .addMapping("/products");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
-        
-        GunServlet gunServlet = new GunServlet();
-        context.addServlet("GunServlet", gunServlet).addMapping("/guns");
-        
-        GunApiServlet gunApiServlet = new GunApiServlet(gunService, objectMapper);
-        context.addServlet("GunApiServlet", gunApiServlet).addMapping("/api/guns");
-
-        context
-                .addServlet("aboutServlet", new AboutServlet())
-                .addMapping("/about");
-
-        context
-                .addServlet("contactServlet", new ContactServlet())
-                .addMapping("/contact");
-
-        context
-                .addServlet("feedbackServlet", new FeedbackServlet())
-                .addMapping("/feedback");
-
-        context
-                .addServlet("homeServlet", new HomeServlet())
-                .addMapping("/home");
-
-        context
-                .addServlet("productServlet", new ProductsServlet())
-                .addMapping("/products");
     }
 
     @Override

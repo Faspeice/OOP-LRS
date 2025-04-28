@@ -1,41 +1,49 @@
 package ru.omgtu.service;
 
 import ru.omgtu.model.Gun;
-import ru.omgtu.repo.GunJsonRepository;
+import ru.omgtu.repo.GunJdbcDao;
 
-import java.util.ArrayList;
+import java.sql.SQLException;
 import java.util.List;
 
 public class GunService {
-    private final GunJsonRepository repository;
-    private List<Gun> guns;
+    private final GunJdbcDao gunDao;
 
-    public GunService(GunJsonRepository repository) {
-        this.repository = repository;
-        this.guns = repository.loadGunsFromFile();
+    public GunService(GunJdbcDao gunDao) throws SQLException {
+        this.gunDao = gunDao;
     }
 
-    public List<Gun> getAllGuns() {
-        return new ArrayList<>(guns);
+    public List<Gun> getAllGuns() throws SQLException {
+        return gunDao.getAll();
     }
 
-    public void addGun(Gun gun) {
-        guns.add(gun);
-        repository.writeGunsToFile(guns);
+    public Gun getGunById(Long id) throws SQLException {
+        return gunDao.getByPK(id);
     }
 
-    public void updateGun(Gun gun) {
-        for (int i = 0; i < guns.size(); i++) {
-            if (guns.get(i).getId().equals(gun.getId())) {
-                guns.set(i, gun);
-                repository.writeGunsToFile(guns);
-                break;
-            }
+    public void addGun(Gun gun) throws SQLException {
+        gunDao.persist(gun);
+    }
+
+    public boolean updateGun(Gun gun) {
+        try {
+            gunDao.update(gun);
+            return true;
+        } catch (SQLException e) {
+            return false;
         }
     }
 
-    public void deleteGun(String id) {
-        guns.removeIf(gun -> gun.getId().equals(id));
-        repository.writeGunsToFile(guns);
+    public boolean deleteGun(Long id) {
+        try {
+            Gun gun = gunDao.getByPK(id);
+            if (gun != null) {
+                gunDao.delete(gun);
+                return true;
+            }
+            return false;
+        } catch (SQLException e) {
+            return false;
+        }
     }
-} 
+}
